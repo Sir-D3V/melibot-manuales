@@ -105,6 +105,24 @@ docker compose up -d --force-recreate
 docker compose logs --tail 20 melibot
 ```
 
-## Detener el bot a propósito
+## Pausar el servicio local a propósito
+Sirve para hacer mantenimiento o para probar que las alertas de Telegram llegan. Solo se detiene lo que corre en esta PC; el VPS y n8n siguen activos.
+
+```bash
+pkill -f 2-tunel-vps.sh; pkill -f "ssh -N"          # detiene el túnel
+pkill -f "remote-debugging-port=9222"              # cierra el Chrome del bot
+```
+- Para probar la alerta basta con detener el túnel; Chrome puede seguir abierto.
+- Mientras esté pausado, `/health` mostrará `"cdp":"unreachable"`.
+- Si llega una pregunta, Telegram avisará "Chrome de la oficina no disponible" y n8n reintentará 3 veces con 7 minutos de espera. Esa alerta se repite como máximo cada 30 minutos; las de captcha y sesión cerrada llegan siempre.
+
+Comprobar que quedó detenido (no debe mostrar procesos):
+```bash
+pgrep -af "2-tunel|ssh -N|remote-debugging-port=9222"
+```
+
+Para reanudar, repite los pasos 2, 3 y 4 de este manual. Si lo reanudas antes de que se agoten los 3 reintentos, la ejecución en n8n se recupera sola.
+
+## Detener el bot a propósito (sin pausar la PC)
 - Para que no publique: en el VPS, pon `DRY_RUN=true` en `/opt/apps/melibot/.env` y ejecuta `docker compose up -d --force-recreate`.
 - Para que no procese correos: en n8n, despublica el workflow principal.
